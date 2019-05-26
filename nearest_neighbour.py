@@ -217,7 +217,7 @@ if __name__ == '__main__':
     # Exercise A
     user_id = int(input("Enter user_id:"))
 
-    split_data("./ml-1m/movies.dat")
+    split_data("./ml-1m/ratings.dat")
 
 
     # Exercise B
