@@ -196,42 +196,81 @@ def split_data (filename):
 
     print(test_data)
 
-
+    filename = filename.replace('.dat','')
+    #filename = filename
     #write test
-    with open('test_' +filename  , 'w') as f:
+    with open( filename + '_test.dat'  , 'w') as f:
         for item in test_data:
             f.write("%s\n" % item)
 
     #write training
-    with open( 'train_' + filename , 'w') as f:
+    with open(  filename + '_train.dat', 'w') as f:
         for item in train_data:
             f.write("%s\n" % item)
 
-def evaluate_pres_recall ():
-    i = 0
+def evaluate_pres_recall (trainfile,testfile):
+
+
+    #traindata
+    ratings_train = pd.read_csv(trainfile, header=None, sep="::",
+                          names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
+    # ratings = ratings.sample(n=10000, random_state=1)
+
+    #testdata
+    ratings_test = pd.read_csv(testfile, header=None, sep="::",
+                                names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
+
+
+    # get all unique users
+    users_train = set(ratings_train['UserID'])
+    users_test = set(ratings_test['UserID'])
+
+    for user in users_train:
+
+        # all movies in train rated by a user
+        #movies_user = ratings_train[ratings_train['UserID'] == user][['MovieID', 'Rating']]
+
+        print(user)
+
+        #for user_te in users_test:
+
+            #movies_user_test = ratings_train[ratings_train['UserID'] == user][['MovieID', 'Rating']]
+
+
+
+        # series to store similarity values for other users
+        similar_users = pd.Series()
+
+        #users.remove(user)
+
+    # remove user that will receive recommendations
+
+
 
 
 
 
 if __name__ == '__main__':
 
-    # Exercise A
+
     user_id = int(input("Enter user_id:"))
 
     split_data("./ml-1m/ratings.dat")
 
+    trainfile = './ml-1m/ratings_test.dat'
+    testfile = './ml-1m/ratings_train.dat'
 
 
+    # task 2
 
-    # Exercise B
-    # show_movies(user_id)
+    evaluate_pres_recall(trainfile,testfile)
 
     # Exercise C
 
     # C.1: first get user with high similarity score
-    filename = './ml-1m/train_ratings.dat'
 
-    similar_users = get_similar_users(filename,user_id)
+
+    similar_users = get_similar_users(trainfile,user_id)
 
     # C.2: recommend movies to the specified user
     # amount of ratings of users the algorithm considers for the computation
