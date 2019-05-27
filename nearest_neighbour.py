@@ -13,7 +13,6 @@ pd.set_option('display.width', 1080)
 # prints up to 15 movies the specified user has rated
 # parameters: user_a -> UserID of the user
 def show_movies(user_a):
-
     try:
         # UserID::MovieID::Rating::Timestamp
         ratings = pd.read_csv('./ml-1m/ratings.dat', header=None, sep="::",
@@ -29,7 +28,7 @@ def show_movies(user_a):
         user_ratings = movies_ratings.loc[movies_ratings['UserID'] == user_a]
 
         # print these movies
-        print(user_ratings.iloc[0:10][['Title', 'Genres','Rating']])
+        print(user_ratings.iloc[0:10][['Title', 'Genres', 'Rating']])
     except Exception as e:
         print('Something went wrong')
         print(e)
@@ -40,8 +39,7 @@ def show_movies(user_a):
 # in connection with the specified user_a
 # parameters: user_a -> UserID of the user for which the similarity values should be generated
 # the Series object will be serialized and stored as similar_users.pkl
-def get_similar_users(user_a):
-
+def get_similar_users(user_a, filename):
     try:
         # check if a similar_users file is already present for the specified user, if not generate one
         if os.path.isfile('./similar_users_' + str(user_a) + '.pkl'):
@@ -50,7 +48,7 @@ def get_similar_users(user_a):
             return similar_users
 
         # UserID::MovieID::Rating::Timestamp
-        ratings = pd.read_csv('./ml-1m/ratings.dat', header=None, sep="::",
+        ratings = pd.read_csv(filename, header=None, sep="::",
                               names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
         # ratings = ratings.sample(n=10000, random_state=1)
 
@@ -73,7 +71,7 @@ def get_similar_users(user_a):
             # movies in common between user_a and user_b
             movies_in_common = set(movies_user_b['MovieID']).intersection(set(movies_user_a['MovieID']))
 
-            if len(movies_in_common) == 0:          # no movies in common
+            if len(movies_in_common) == 0:  # no movies in common
                 similar_users[str(user_b)] = -1
             else:
                 # relevant movies user_a
@@ -89,9 +87,9 @@ def get_similar_users(user_a):
                 # check slides (VC Recommender Systems P01 Intro and CF -> slide 30)
                 x = y1 = y2 = 0
                 for index, row in relevant_movies_a.iterrows():
-
                     rating_a = row['Rating']
-                    rating_b = relevant_movies_b[relevant_movies_b['MovieID'] == row['MovieID']][['Rating']].iloc[0]['Rating']
+                    rating_b = relevant_movies_b[relevant_movies_b['MovieID'] == row['MovieID']][['Rating']].iloc[0][
+                        'Rating']
 
                     x = x + (rating_a - mean_rating_user_a) * (rating_b - mean_rating_user_b)
                     y1 = y1 + pow((rating_a - mean_rating_user_a), 2)
@@ -109,7 +107,7 @@ def get_similar_users(user_a):
         # sort user by their similarity values in descending order
         similar_users = similar_users.sort_values(ascending=False)
 
-        #print(similar_users)
+        # print(similar_users)
         # serialize series object and save it
         similar_users.to_pickle('./similar_users_' + str(user_a) + '.pkl')
 
@@ -175,8 +173,8 @@ def recommend_movies(user_a, similar_users, neighborhood_size):
                              names=["MovieID", "Title", "Genres"], engine='python')
 
         # iterate over the first 10 elements and print their data
-        for index, value in movies_to_recommend.head(10).iteritems():
-            print(movies.loc[movies['MovieID'] == index].to_string(index=False), "rating: ", value)
+        #for index, value in movies_to_recommend.head(10).iteritems():
+            #print(movies.loc[movies['MovieID'] == index].to_string(index=False), "rating: ", value)
 
     except Exception as e:
         print('Something went wrong')
@@ -184,8 +182,7 @@ def recommend_movies(user_a, similar_users, neighborhood_size):
         print(e)
 
 
-def split_data (filename):
-
+def split_data(filename):
     with open(filename, "r") as f:
         data = f.read().split('\n')
 
@@ -194,42 +191,99 @@ def split_data (filename):
     train_data = data[:int((len(data) + 1) * .80)]  # Remaining 80% to training set
     test_data = data[int(len(data) * .80 + 1):]  # Splits 20% data to test set
 
-    print(test_data)
+    #print(test_data)
 
-
-    #write test
-    with open(filename + '_test', 'w') as f:
+    filename = filename.replace('.dat', '')
+    # filename = filename
+    # write test
+    with open(filename + '_test.dat', 'w') as f:
         for item in test_data:
             f.write("%s\n" % item)
 
-    #write training
-    with open(filename + '_train', 'w') as f:
+    # write training
+    with open(filename + '_train.dat', 'w') as f:
         for item in train_data:
             f.write("%s\n" % item)
 
 
+def evaluate_pres_recall(trainfile, testfile):
+    # traindata
+    ratings_train = pd.read_csv(trainfile, header=None, sep="::",
+                                names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
+    # ratings = ratings.sample(n=10000, random_state=1)
 
+    # testdata
+    ratings_test = pd.read_csv(testfile, header=None, sep="::",
+                               names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
+
+    # get all unique users
+    users_train = set(ratings_train['UserID'])
+    users_test = set(ratings_test['UserID'])
+
+
+    # get all values for the users
+    for user in users_train:
+
+        #print(user)
+        # all movies in train rated by a user
+        # movies_user = ratings_train[ratings_train['UserID'] == user][['MovieID', 'Rating']]
+
+        #get similiar users
+        similar_users = pd.Series()
+        similar_users = get_similar_users(user, trainfile)
+
+        # recommend movies to the specified user
+        # amount of ratings of users the algorithm considers for the computation
+        neighborhood_size = 11
+        recommend_movies(user, similar_users, neighborhood_size)
+
+
+
+    #match them with the test data
+    for user in users_train:
+
+        for user_te in users_test:
+
+            if user == user_te:
+
+                movies_user_test = ratings_test[ratings_test['UserID'] == user]
+                [['UserID', 'MovieID', 'Rating']]
+
+                movies_to_recommend = pd.read_pickle('./recommended_movies_' + str(user) + '.pkl')
+
+
+                #just the movies above 3 stars are taken into account
+                #movies_user_test = movies_user_test[movies_user_test['Rating'] > 3]
+
+                # print(user)
+                #print(movies_user_test)
+
+
+
+
+        # series to store similarity values for other users
+
+        # users.remove(user)
 
 
 
 if __name__ == '__main__':
-
-    # Exercise A
-    user_id = int(input("Enter user_id:"))
+    #user_id = int(input("Enter user_id:"))
 
     split_data("./ml-1m/ratings.dat")
 
+    trainfile = './ml-1m/ratings_train.dat'
+    testfile = './ml-1m/ratings_test.dat'
 
-    # Exercise B
-    # show_movies(user_id)
+    # task 2
+
+    evaluate_pres_recall(trainfile, testfile)
 
     # Exercise C
 
     # C.1: first get user with high similarity score
-    similar_users = get_similar_users(user_id)
 
     # C.2: recommend movies to the specified user
     # amount of ratings of users the algorithm considers for the computation
-    neighborhood_size = 11
-    recommend_movies(user_id, similar_users, neighborhood_size)
-
+    # neighborhood_size = 11
+    # recommend_movies(user_id, similar_users, neighborhood_size)
