@@ -1,7 +1,7 @@
 import nearest_neighbour_1 as nn
 import pandas as pd
 
-# nn.split_data("./ml-1m/ratings.dat")
+nn.split_data("./ml-1m/ratings.dat")
 
 # UserID::MovieID::Rating::Timestamp
 ratings_train = pd.read_csv('./ml-1m/ratings.dat_train', header=None, sep="::",
