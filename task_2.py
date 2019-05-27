@@ -34,8 +34,9 @@ def evaluate_pres_recall():
     tn = 0
 
 
+
     for user in users_train:
-        print(user)
+        print("working on: ", user)
 
         # get similiar users
         similar_users = pd.Series()
@@ -73,12 +74,12 @@ def evaluate_pres_recall():
                     elif m <= 3 and row['Rating'] >3:
                         fn = fn +1
 
-        print(tp)
-        print(fp)
-        print(fn)
+    print(tp)
+    print(fp)
+    print(fn)
 
-        print('Preciscion: ', tp/(tp+fp))
-        print('Recall: ', tp/(tp+fn))
+    print('Preciscion: ', tp/(tp+fp))
+    print('Recall: ', tp/(tp+fn))
 
 
 
