@@ -24,4 +24,6 @@ for user in users:
     movies_to_rate = ratings_test[ratings_test['UserID'] == user][['MovieID', 'Rating']]
 
     recommended_movies = nn.recommend_movies(user, similar_users, 11, ratings_train, movies_to_rate)
-    break
+    print(recommended_movies)
+
+

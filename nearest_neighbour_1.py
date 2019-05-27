@@ -1,40 +1,7 @@
 import pandas as pd
 import math
 import traceback
-import os
 import random
-
-# pandas option to display all columns when printing
-pd.set_option('display.max_rows', 100)
-pd.set_option('display.max_columns', 10)
-pd.set_option('display.width', 1080)
-
-
-# prints up to 15 movies the specified user has rated
-# parameters: user_a -> UserID of the user
-def show_movies(user_a):
-
-    try:
-        # UserID::MovieID::Rating::Timestamp
-        ratings = pd.read_csv('./ml-1m/ratings.dat', header=None, sep="::",
-                              names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
-        # MovieID::Title::Genres
-        movies = pd.read_csv('./ml-1m/movies.dat', header=None, encoding="ISO-8859-1", sep="::",
-                             names=["MovieID", "Title", "Genres"], engine='python')
-
-        # merge dataframes rating and movies
-        movies_ratings = movies.merge(ratings, how='inner', on="MovieID")
-
-        # select all movies rated by the specified user
-        user_ratings = movies_ratings.loc[movies_ratings['UserID'] == user_a]
-
-        # print these movies
-        print(user_ratings.iloc[0:10][['Title', 'Genres','Rating']])
-    except Exception as e:
-        print('Something went wrong')
-        print(e)
-        traceback.print_exc()
-
 
 # creates a pandas.Series object, index is the UserID of the different users, value is the similarity those users have
 # in connection with the specified user_a
@@ -43,16 +10,6 @@ def show_movies(user_a):
 def get_similar_users(user_a, ratings):
 
     try:
-        # check if a similar_users file is already present for the specified user, if not generate one
-        #if os.path.isfile('./similar_users_' + str(user_a) + '.pkl'):
-        #    # read the file
-        #    similar_users = pd.read_pickle('./similar_users_' + str(user_a) + '.pkl')
-        #    return similar_users
-
-        # UserID::MovieID::Rating::Timestamp
-        #ratings = pd.read_csv('./ml-1m/ratings.dat', header=None, sep="::",
-        #                      names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
-        # ratings = ratings.sample(n=10000, random_state=1)
 
         # get all unique users
         users = set(ratings['UserID'])
@@ -109,11 +66,8 @@ def get_similar_users(user_a, ratings):
         # sort user by their similarity values in descending order
         similar_users = similar_users.sort_values(ascending=False)
 
-        #print(similar_users)
-        # serialize series object and save it
-        # similar_users.to_pickle('./similar_users_' + str(user_a) + '.pkl')
-
         return similar_users
+
     except Exception as e:
         print('Something went wrong')
         print(e)
@@ -134,39 +88,34 @@ def recommend_movies(user_a, similar_users, neighborhood_size, ratings, movies_t
             amount_of_ratings = 0
 
             for user, value in similar_users.iteritems():
-                # get the users rating
-                rating_similar_user = ratings.loc[(ratings['UserID'] == user) & (ratings['MovieID'] == row['MovieID'])]
-                rating_similar_use = rating_similar_user['Rating']
+                # get the movies ratings
+                rating_similar_user = ratings[ratings['MovieID'] == row['MovieID']]
+                # get the users ratings
+                rating_similar_user = rating_similar_user[rating_similar_user['UserID'] == int(user)]
+
+                rating_similar_user = rating_similar_user['Rating']
                 # check if similar user has rated the movie
                 if not rating_similar_user.empty:
-                    if not math.isnan(rating_similar_user):
-                        movie_predicted_rating += rating_similar_user
-                        amount_of_ratings += 1
+                    movie_predicted_rating += int(rating_similar_user)
+                    amount_of_ratings += 1
 
                 # if sufficient ratings have been considered exit the for loop
                 if amount_of_ratings >= neighborhood_size:
                     break
 
+            # if no predictive rating could be generated due to missing data
             if amount_of_ratings == 0:
-                movie_predicted_rating = -1
+                movie_predicted_rating = 0
             else:
                 # calculate average of the ratings
                 movie_predicted_rating /= amount_of_ratings
 
+            # add the predicted movie rating to the series
             movies_to_recommend.loc[row['MovieID']] = movie_predicted_rating
 
         # sort movie list with movies with highest recommendations score on top
         movies_to_recommend = movies_to_recommend.sort_values(ascending=False)
-        #movies_to_recommend.to_pickle('./recommended_movies_' + str(user_a) + '.pkl')
         return movies_to_recommend
-
-        # MovieID::Title::Genres
-        #movies = pd.read_csv('./ml-1m/movies.dat', header=None, encoding="ISO-8859-1", sep="::",
-        #                    names=["MovieID", "Title", "Genres"], engine='python')
-
-        # iterate over the first 10 elements and print their data
-        #for index, value in movies_to_recommend.head(10).iteritems():
-        #    print(movies.loc[movies['MovieID'] == index].to_string(index=False), "rating: ", value)
 
     except Exception as e:
         print('Something went wrong')
@@ -186,7 +135,6 @@ def split_data (filename):
 
     print(train_data)
 
-
     #write test
     with open(filename + '_test', 'w') as f:
         for item in test_data:
@@ -196,30 +144,3 @@ def split_data (filename):
     with open(filename + '_train', 'w') as f:
         for item in train_data:
             f.write("%s\n" % item)
-
-
-
-
-
-
-if __name__ == '__main__':
-
-    # Exercise A
-    user_id = int(input("Enter user_id:"))
-
-    split_data("./ml-1m/ratings.dat")
-
-
-    # Exercise B
-    # show_movies(user_id)
-
-    # Exercise C
-
-    # C.1: first get user with high similarity score
-    similar_users = get_similar_users(user_id)
-
-    # C.2: recommend movies to the specified user
-    # amount of ratings of users the algorithm considers for the computation
-    neighborhood_size = 11
-    recommend_movies(user_id, similar_users, neighborhood_size)
-
