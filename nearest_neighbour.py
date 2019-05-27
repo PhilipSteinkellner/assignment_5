@@ -40,7 +40,7 @@ def show_movies(user_a):
 # in connection with the specified user_a
 # parameters: user_a -> UserID of the user for which the similarity values should be generated
 # the Series object will be serialized and stored as similar_users.pkl
-def get_similar_users(user_a):
+def get_similar_users(user_a, filename):
 
     try:
         # check if a similar_users file is already present for the specified user, if not generate one
@@ -50,7 +50,7 @@ def get_similar_users(user_a):
             return similar_users
 
         # UserID::MovieID::Rating::Timestamp
-        ratings = pd.read_csv('./ml-1m/ratings.dat', header=None, sep="::",
+        ratings = pd.read_csv(filename, header=None, sep="::",
                               names=["UserID", "MovieID", "Rating", "Timestamp"], engine='python')
         # ratings = ratings.sample(n=10000, random_state=1)
 
@@ -198,16 +198,17 @@ def split_data (filename):
 
 
     #write test
-    with open(filename + '_test', 'w') as f:
+    with open('test_' +filename  , 'w') as f:
         for item in test_data:
             f.write("%s\n" % item)
 
     #write training
-    with open(filename + '_train', 'w') as f:
+    with open( 'train_' + filename , 'w') as f:
         for item in train_data:
             f.write("%s\n" % item)
 
-
+def evaluate_pres_recall ():
+    i = 0
 
 
 
@@ -220,13 +221,17 @@ if __name__ == '__main__':
     split_data("./ml-1m/ratings.dat")
 
 
+
+
     # Exercise B
     # show_movies(user_id)
 
     # Exercise C
 
     # C.1: first get user with high similarity score
-    similar_users = get_similar_users(user_id)
+    filename = './ml-1m/train_ratings.dat'
+
+    similar_users = get_similar_users(filename,user_id)
 
     # C.2: recommend movies to the specified user
     # amount of ratings of users the algorithm considers for the computation
