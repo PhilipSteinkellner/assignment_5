@@ -133,14 +133,12 @@ def split_data (filename):
     train_data = data[:int((len(data) + 1) * .80)]  # Remaining 80% to training set
     test_data = data[int(len(data) * .80 + 1):]  # Splits 20% data to test set
 
-    print(train_data)
-
     #write test
-    with open(filename + '_test', 'w') as f:
+    with open('./ml-1m/ratings_test.dat', 'w') as f:
         for item in test_data:
             f.write("%s\n" % item)
 
     #write training
-    with open(filename + '_train', 'w') as f:
+    with open('./ml-1m/ratings_train.dat', 'w') as f:
         for item in train_data:
             f.write("%s\n" % item)

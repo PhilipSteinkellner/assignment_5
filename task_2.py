@@ -4,8 +4,10 @@ import math
 import nearest_neighbour_1 as nn
 
 
-
 def evaluate_pres_recall():
+
+    # split the data 80% trainings data and 20% test data
+    nn.split_data("./ml-1m/ratings.dat")
 
     trainfile = './ml-1m/ratings_train.dat'
     testfile = './ml-1m/ratings_test.dat'
@@ -88,6 +90,3 @@ def evaluate_pres_recall():
 if __name__ == '__main__':
 
     evaluate_pres_recall()
-
-
-
